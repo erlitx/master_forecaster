@@ -28,6 +28,24 @@ class UserForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
     submit = SubmitField('Push')
 
+# Get update DB
+@app.route('/update/<int:id>', methods = ['GET', 'POST'])
+def update(id):
+    form = UserForm()
+    name_to_update = Users.query.get_or_404(id)
+    if request.method == 'POST':
+        name_to_update.name = request.form['name']
+        name_to_update.email = request.form['email']
+        try:
+            db.session.commit()
+            flash('User updated successfully')
+            return render_template('update.html', form=form, name_to_update=name_to_update)
+        except:
+            flash('Something went wrong')
+            return render_template('update.html', form=form, name_to_update=name_to_update)
+    else:
+        return render_template('update.html', form=form, name_to_update=name_to_update)
+
 # Create a Form Class
 class NamerForm(FlaskForm):
     name = StringField('What is our name?', validators=[DataRequired()])
