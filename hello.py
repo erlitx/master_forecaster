@@ -19,17 +19,37 @@ class Users(db.Model):
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False, unique=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow())
+    # Create a string
+    def __repr__(self):
+        return f'<Name {self.name}>'
 
-# Create a string
-def __repr__(self):
-    return f'{self.name}'
-
-
+class UserForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
+    submit = SubmitField('Push')
 
 # Create a Form Class
 class NamerForm(FlaskForm):
     name = StringField('What is our name?', validators=[DataRequired()])
     submit = SubmitField('Push')
+
+@app.route('/user/add', methods = ['GET', 'POST'])
+def add_user():
+    name = None
+    form = UserForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(email=form.email.data).first()
+        if user is None:
+            user = Users(name=form.name.data, email=form.email.data)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data
+        email = form.email.data
+        form.name.data = ''
+        form.email.data = ''
+        flash('User Added')
+    our_users = Users.query.order_by(Users.date_added)
+    return render_template('add_user.html', form=form, name=name, our_users=our_users)
 
 @app.route('/')
 def index():
@@ -71,4 +91,13 @@ def page_not_found(e):
 if __name__ == '__main__':
     app.run(debug=DEBUG, host='0.0.0.0', port=PORT)
 
+# Create DB from terminal
+# from hello import app, db
+# app.app_context().push()
+# db.create_all()
 
+# Terminal commands
+# FLASK_APP=app.py
+# FLASK_DEBUG=1
+# TEMPLATES_AUTO_RELOAD=1
+# flask run
