@@ -11,7 +11,15 @@ PORT = int(os.getenv('PORT', 8080))
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
+# Old SQLite DB
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+# PostgreSQL
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://users.db'
+
+#New MySql DB
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://erlit:karbaFosbiz1!@localhost/our_users'
+
 db = SQLAlchemy(app)
 
 class Users(db.Model):
@@ -91,7 +99,7 @@ def page_not_found(e):
 if __name__ == '__main__':
     app.run(debug=DEBUG, host='0.0.0.0', port=PORT)
 
-# Create DB from terminal
+# Create SQLite DB from terminal
 # from hello import app, db
 # app.app_context().push()
 # db.create_all()
@@ -101,3 +109,15 @@ if __name__ == '__main__':
 # FLASK_DEBUG=1
 # TEMPLATES_AUTO_RELOAD=1
 # flask run
+
+# open mysql
+# mysql -u root -p
+
+# Create MySQL DB from terminal
+# pip install pymysql
+# pip install criptography
+# python create_db.py
+# Create MySQL DB from terminal
+# from hello import app, db
+# app.app_context().push()
+# db.create_all()
