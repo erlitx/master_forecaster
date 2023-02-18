@@ -40,6 +40,7 @@ class UserForm(FlaskForm):
     favorite_color = StringField('Favorite Color')
     submit = SubmitField('Push')
 
+
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
 def update(id):
@@ -57,7 +58,7 @@ def update(id):
             flash('Something went wrong')
             return render_template('update.html', form=form, name_to_update=name_to_update)
     else:
-        return render_template('update.html', form=form, name_to_update=name_to_update)
+        return render_template('update.html', form=form, name_to_update=name_to_update, id=id)
 
 # Create a Form Class
 class NamerForm(FlaskForm):
@@ -83,6 +84,22 @@ def add_user():
         flash('User Added')
     our_users = Users.query.order_by(Users.date_added)
     return render_template('add_user.html', form=form, name=name, our_users=our_users)
+
+@app.route('/delete/<int:id>')
+def delete(id):
+    name = None
+    form = UserForm()
+    user_to_delete = Users.query.get_or_404(id)
+    try:
+        db.session.delete(user_to_delete)
+        db.session.commit()
+        flash('User deleted successfully')
+        our_users = Users.query.order_by(Users.date_added)
+        return render_template('add_user.html', form=form, name=name, our_users=our_users)
+    except:
+        flash('Something went wrong')
+        our_users = Users.query.order_by(Users.date_added)
+        return render_template('add_user.html', form=form, name=name, our_users=our_users)
 
 @app.route('/')
 def index():
