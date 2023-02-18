@@ -1,8 +1,8 @@
 import os
 from flask import Flask, render_template, request, flash
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField
-from wtforms.validators import DataRequired
+from wtforms import SubmitField, StringField, PasswordField, BooleanField, ValidationError
+from wtforms.validators import DataRequired, equal_to, length
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
@@ -54,6 +54,8 @@ class UserForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
     favorite_color = StringField('Favorite Color')
+    password_hash = PasswordField('Password', validators=[DataRequired(), equal_to('password_hash2', message='Passwords Must Match!')])
+    password_hash2 = PasswordField('Repeat Password', validators=[DataRequired()])
     submit = SubmitField('Push')
 
 
@@ -88,7 +90,10 @@ def add_user():
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = Users(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data)
+            # Hash the password
+            hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
+            user = Users(name=form.name.data, email=form.email.data,
+                         favorite_color=form.favorite_color.data, password_hash = hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
@@ -97,6 +102,7 @@ def add_user():
         form.name.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
+        form.password_hash.data = '***.data'
         flash('User Added')
     our_users = Users.query.order_by(Users.date_added)
     return render_template('add_user.html', form=form, name=name, our_users=our_users)
