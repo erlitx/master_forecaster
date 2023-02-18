@@ -78,6 +78,12 @@ def update(id):
     else:
         return render_template('update.html', form=form, name_to_update=name_to_update, id=id)
 
+# Password Class
+class PasswordForm(FlaskForm):
+    email = StringField('What is our email?', validators=[DataRequired()])
+    password_hash = PasswordField('What is our password?', validators=[DataRequired()])
+    submit = SubmitField('Push')
+
 # Create a Form Class
 class NamerForm(FlaskForm):
     name = StringField('What is our name?', validators=[DataRequired()])
@@ -93,7 +99,7 @@ def add_user():
             # Hash the password
             hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
             user = Users(name=form.name.data, email=form.email.data,
-                         favorite_color=form.favorite_color.data, password_hash = hashed_pw)
+                         favorite_color=form.favorite_color.data, password_hash=hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
@@ -135,6 +141,25 @@ def index():
 @app.route('/user/<name>')
 def user(name):
     return render_template('user.html', user_name=name)
+
+@app.route('/test_pw', methods = ['GET', 'POST'])
+def test_pw():
+    email = None
+    password = None
+    pw_to_check = None
+    passed = None
+    form = PasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password_hash.data
+        form.email.data = ''
+        form.password_hash.data = ''
+        # Lookup USer by Email
+        pw_to_check = Users.query.filter_by(email=email).first()
+        # Check Hashed Password
+        passed = check_password_hash(pw_to_check.password_hash, password)
+    return render_template('test_pw.html', email=email, password=password,
+                           form=form, pw_to_check=pw_to_check, passed=passed)
 
 @app.route('/name', methods = ['GET', 'POST'])
 def name():
