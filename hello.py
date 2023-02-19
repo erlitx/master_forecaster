@@ -2,10 +2,11 @@ import os
 from flask import Flask, render_template, request, flash
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, BooleanField, ValidationError
+from wtforms.widgets import TextArea
 from wtforms.validators import DataRequired, equal_to, length
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from datetime import datetime
+from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 
 DEBUG = bool(os.getenv('DEBUG', True))
@@ -58,6 +59,57 @@ class UserForm(FlaskForm):
     password_hash2 = PasswordField('Repeat Password', validators=[DataRequired()])
     submit = SubmitField('Push')
 
+# Password Class
+class PasswordForm(FlaskForm):
+    email = StringField('What is our email?', validators=[DataRequired()])
+    password_hash = PasswordField('What is our password?', validators=[DataRequired()])
+    submit = SubmitField('Push')
+
+# Create a Form Class
+class NamerForm(FlaskForm):
+    name = StringField('What is our name?', validators=[DataRequired()])
+    submit = SubmitField('Push')
+
+# Create a Blog Post Model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow())
+    slug = db.Column(db.String(255))
+
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = StringField('Content', validators=[DataRequired()], widget=TextArea())
+    author = StringField('Author', validators=[DataRequired()])
+    slug = StringField('Slug', validators=[DataRequired()])
+    submit = SubmitField('Post')
+
+@app.route('/add_post', methods=['GET', 'POST'])
+def add_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        form.title.data = ''
+        form.content.data = ''
+        form.author.data = ''
+        form.slug.data = ''
+
+        # Add post to database
+        db.session.add(post)
+        db.session.commit()
+
+        flash('Post submitted successfully')
+    return render_template('add_post.html', form=form)
+
+#JSON
+@app.route('/date')
+def get_current_date():
+    favorite_pizza = {'Mary': 'Pepperoni', 'Mark': 'Cheese', 'Tim': 'Pineapple'}
+    return favorite_pizza
+    #return {'Date': date.today()}
+
 
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
@@ -77,17 +129,6 @@ def update(id):
             return render_template('update.html', form=form, name_to_update=name_to_update)
     else:
         return render_template('update.html', form=form, name_to_update=name_to_update, id=id)
-
-# Password Class
-class PasswordForm(FlaskForm):
-    email = StringField('What is our email?', validators=[DataRequired()])
-    password_hash = PasswordField('What is our password?', validators=[DataRequired()])
-    submit = SubmitField('Push')
-
-# Create a Form Class
-class NamerForm(FlaskForm):
-    name = StringField('What is our name?', validators=[DataRequired()])
-    submit = SubmitField('Push')
 
 @app.route('/user/add', methods = ['GET', 'POST'])
 def add_user():
