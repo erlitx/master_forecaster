@@ -16,9 +16,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
 
 # Old SQLite DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 # PostgreSQL
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123@localhost:5432/postgres'
 
 #New MySql DB
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://erlit:karbaFosbiz1!@localhost/our_users'
@@ -85,6 +85,11 @@ class PostForm(FlaskForm):
     author = StringField('Author', validators=[DataRequired()])
     slug = StringField('Slug', validators=[DataRequired()])
     submit = SubmitField('Post')
+
+@app.route('/posts')
+def posts():
+    posts = Posts.query.order_by(Posts.date_posted)
+    return render_template('posts.html', posts=posts)
 
 @app.route('/add_post', methods=['GET', 'POST'])
 def add_post():
@@ -256,3 +261,42 @@ if __name__ == '__main__':
 # migrate = Migrate(app, db)
 # $FLASK_APP=hello.py flask db migrate -m 'First'
 # $FLASK_APP=hello.py flask db upgrade
+
+#PostgeSQL
+# Login with root ubuntu password
+#$ sudo -i -u postgres
+
+# create a new role and pass
+#$ sudo -i -u postgres
+#psql
+#CREATE ROLE XXX WITH LOGIN ENCRYPTED PASSWORD 'YYYYY';
+
+# create a password for user
+#$ sudo -i -u postgres
+#psql
+#\password postgres
+
+#Acces with a user and password
+#psql -U postgres -W
+
+# Note that you can connect to a specific database when you log in to the PostgreSQL database server:
+#
+# $ psql -U postgres -d dvdrental
+# In this command, the -d flag means database. In this command, you connect to t
+# he dvdrental database using the postgres user.
+
+
+#Переключиться на другую БД:
+#$ psql -d postgres
+
+#How to create a new table with SQLAlchemy
+# Enter a python command line - $python
+# from hello import db, app
+# app.app_context().push()
+# db.create_all()
+
+# How to migrate
+# $FLASK_APP=hello.py flask db init
+# $FLASK_APP=hello.py flask db migrate -m 'First'
+# $FLASK_APP=hello.py flask db upgrade
+
