@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, flash
+from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, BooleanField, ValidationError
 from wtforms.widgets import TextArea
@@ -95,6 +95,27 @@ def posts():
 def post(id):
     post = Posts.query.get_or_404(id)
     return render_template('post.html', post=post)
+
+@app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
+def edit_post(id):
+    post = Posts.query.get_or_404(id)
+    form = PostForm()
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.author = form.author.data
+        post.slug = form.slug.data
+        post.content = form.content.data
+        # Update Database
+        db.session.add(post)
+        db.session.commit()
+        flash('Post has been updated')
+        return redirect(url_for('post', id=post.id))
+    form.title.data = post.title
+    form.author.data = post.author
+    form.slug.data = post.slug
+    form.content.data = post.content
+    return render_template('edit_post.html', form=form)
+
 
 @app.route('/add_post', methods=['GET', 'POST'])
 def add_post():
