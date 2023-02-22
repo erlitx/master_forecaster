@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
 DEBUG = bool(os.getenv('DEBUG', True))
 PORT = int(os.getenv('PORT', 8070))
@@ -26,8 +27,20 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123@localhost:543
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-class Users(db.Model):
+# Some login stuff
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key = True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False, unique=True)
     favorite_color = db.Column(db.String(200))
@@ -53,6 +66,7 @@ class Users(db.Model):
 
 class UserForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
     favorite_color = StringField('Favorite Color')
     password_hash = PasswordField('Password', validators=[DataRequired(), equal_to('password_hash2', message='Passwords Must Match!')])
@@ -85,6 +99,46 @@ class PostForm(FlaskForm):
     author = StringField('Author', validators=[DataRequired()])
     slug = StringField('Slug', validators=[DataRequired()])
     submit = SubmitField('Post')
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
+
+
+
+# Create Login Page
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            # Check hash
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user)
+                flash('Login succesfull')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Password incorrect')
+        else:
+            flash('Username not found')
+    return render_template('login.html', form=form)
+
+#Create Log out
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    flash('You have been log out')
+    return redirect(url_for('login'))
+
+# Create Dashboad Page
+@app.route('/dashboad', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
 
 @app.route('/posts')
 def posts():
@@ -184,14 +238,16 @@ def add_user():
         if user is None:
             # Hash the password
             hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
-            user = Users(name=form.name.data, email=form.email.data,
+            user = Users(name=form.name.data, username=form.username.data, email=form.email.data,
                          favorite_color=form.favorite_color.data, password_hash=hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
+        username = form.name.data
         email = form.email.data
         favorite_color = form.favorite_color.data
         form.name.data = ''
+        form.username.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
         form.password_hash.data = '***.data'
