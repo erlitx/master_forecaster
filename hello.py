@@ -10,7 +10,7 @@ from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 
 DEBUG = bool(os.getenv('DEBUG', True))
-PORT = int(os.getenv('PORT', 8080))
+PORT = int(os.getenv('PORT', 8070))
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
@@ -116,6 +116,20 @@ def edit_post(id):
     form.content.data = post.content
     return render_template('edit_post.html', form=form)
 
+@app.route('/posts/delete/<int:id>', methods=['GET', 'POST'])
+def delete_post(id):
+    post_to_delete = Posts.query.get_or_404(id)
+
+    try:
+        flash('Post has been deleted')
+        db.session.delete(post_to_delete)
+        db.session.commit()
+        posts = Posts.query.order_by(Posts.date_posted)
+        return render_template('posts.html', posts=posts)
+    except:
+        flash("Can't delete post, something goes wrong")
+        posts = Posts.query.order_by(Posts.date_posted)
+        return render_template('posts.html', posts=posts)
 
 @app.route('/add_post', methods=['GET', 'POST'])
 def add_post():
