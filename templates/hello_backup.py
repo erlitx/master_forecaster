@@ -1,11 +1,14 @@
 import os
 from flask import Flask, render_template, request, flash, redirect, url_for
+from flask_wtf import FlaskForm
+from wtforms import SubmitField, StringField, PasswordField, BooleanField, ValidationError
+from wtforms.widgets import TextArea
+from wtforms.validators import DataRequired, equal_to, length
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm
 
 DEBUG = bool(os.getenv('DEBUG', True))
 PORT = int(os.getenv('PORT', 8070))
@@ -17,8 +20,10 @@ app.config['SECRET_KEY'] = 'my hot pot secret key'
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 # PostgreSQL
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123@localhost:5432/postgres'
+
 #New MySql DB
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://erlit:karbaFosbiz1!@localhost/our_users'
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -53,9 +58,31 @@ class Users(db.Model, UserMixin):
 
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
     # Create a string
     def __repr__(self):
         return f'<Name {self.name}>'
+
+class UserForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
+    favorite_color = StringField('Favorite Color')
+    password_hash = PasswordField('Password', validators=[DataRequired(), equal_to('password_hash2', message='Passwords Must Match!')])
+    password_hash2 = PasswordField('Repeat Password', validators=[DataRequired()])
+    submit = SubmitField('Push')
+
+# Password Class
+class PasswordForm(FlaskForm):
+    email = StringField('What is our email?', validators=[DataRequired()])
+    password_hash = PasswordField('What is our password?', validators=[DataRequired()])
+    submit = SubmitField('Push')
+
+# Create a Form Class
+class NamerForm(FlaskForm):
+    name = StringField('What is our name?', validators=[DataRequired()])
+    submit = SubmitField('Push')
 
 # Create a Blog Post Model
 class Posts(db.Model):
@@ -66,62 +93,20 @@ class Posts(db.Model):
     date_posted = db.Column(db.DateTime, default=datetime.utcnow())
     slug = db.Column(db.String(255))
 
-@app.route('/')
-def index():
-    first_name = 'Miha'
-    stuff = 'This is <strong>bold</strong> text'
-    favorite_pizza = ['pepperoni', 'mexicana', 'four cheese']
-    return render_template('index.html', first_name=first_name,
-                                         stuff=stuff,
-                                         favorite_pizza=favorite_pizza)
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = StringField('Content', validators=[DataRequired()], widget=TextArea())
+    author = StringField('Author', validators=[DataRequired()])
+    slug = StringField('Slug', validators=[DataRequired()])
+    submit = SubmitField('Post')
 
-@app.route('/add_post', methods=['GET', 'POST'])
-#@login_required
-def add_post():
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
-        form.title.data = ''
-        form.content.data = ''
-        form.author.data = ''
-        form.slug.data = ''
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
-        # Add post to database
-        db.session.add(post)
-        db.session.commit()
 
-        flash('Post submitted successfully')
-    return render_template('add_post.html', form=form)
 
-#JSON
-@app.route('/date')
-def get_current_date():
-    favorite_pizza = {'Mary': 'Pepperoni', 'Mark': 'Cheese', 'Tim': 'Pineapple'}
-    return favorite_pizza
-    #return {'Date': date.today()}
-
-# Create Dashboad Page
-@app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
-def dashboard():
-    form = UserForm()
-    id = current_user.id
-    name_to_update = Users.query.get_or_404(id)
-    if request.method == 'POST':
-        name_to_update.name = request.form['name']
-        name_to_update.username = request.form['username']
-        name_to_update.email = request.form['email']
-        name_to_update.favorite_color = request.form['favorite_color']
-        try:
-            db.session.commit()
-            flash('User updated successfully')
-            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
-        except:
-            flash('Something went wrong')
-            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
-    else:
-        return render_template('dashboard.html', form=form, name_to_update=name_to_update, id=id)
-    return render_template('dashboard.html')
 
 # Create Login Page
 @app.route('/login', methods=['GET', 'POST'])
@@ -148,6 +133,29 @@ def logout():
     logout_user()
     flash('You have been log out')
     return redirect(url_for('login'))
+
+# Create Dashboad Page
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    form = UserForm()
+    id = current_user.id
+    name_to_update = Users.query.get_or_404(id)
+    if request.method == 'POST':
+        name_to_update.name = request.form['name']
+        name_to_update.username = request.form['username']
+        name_to_update.email = request.form['email']
+        name_to_update.favorite_color = request.form['favorite_color']
+        try:
+            db.session.commit()
+            flash('User updated successfully')
+            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+        except:
+            flash('Something went wrong')
+            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+    else:
+        return render_template('dashboard.html', form=form, name_to_update=name_to_update, id=id)
+    return render_template('dashboard.html')
 
 @app.route('/posts')
 def posts():
@@ -194,6 +202,32 @@ def delete_post(id):
         flash("Can't delete post, something goes wrong")
         posts = Posts.query.order_by(Posts.date_posted)
         return render_template('posts.html', posts=posts)
+
+@app.route('/add_post', methods=['GET', 'POST'])
+#@login_required
+def add_post():
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        form.title.data = ''
+        form.content.data = ''
+        form.author.data = ''
+        form.slug.data = ''
+
+        # Add post to database
+        db.session.add(post)
+        db.session.commit()
+
+        flash('Post submitted successfully')
+    return render_template('add_post.html', form=form)
+
+#JSON
+@app.route('/date')
+def get_current_date():
+    favorite_pizza = {'Mary': 'Pepperoni', 'Mark': 'Cheese', 'Tim': 'Pineapple'}
+    return favorite_pizza
+    #return {'Date': date.today()}
+
 
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
@@ -256,6 +290,15 @@ def delete(id):
         flash('Something went wrong')
         our_users = Users.query.order_by(Users.date_added)
         return render_template('add_user.html', form=form, name=name, our_users=our_users)
+
+@app.route('/')
+def index():
+    first_name = 'Miha'
+    stuff = 'This is <strong>bold</strong> text'
+    favorite_pizza = ['pepperoni', 'mexicana', 'four cheese']
+    return render_template('index.html', first_name=first_name,
+                                         stuff=stuff,
+                                         favorite_pizza=favorite_pizza)
 
 @app.route('/user/<name>')
 def user(name):
