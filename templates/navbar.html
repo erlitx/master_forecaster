@@ -10,19 +10,23 @@
           <a class="nav-link" href="{{ url_for('name') }}">Name</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('add_user') }}">Add User</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="{{ url_for('add_post') }}">Add Blog Post</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('posts') }}">Posts</a>
         </li>
         {% if current_user.is_authenticated %}
-          <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('logout') }}">Log out from {{current_user.username}}</a>
+          <li>
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Log out from {{current_user.username}}</a>
+          </li>
+
         {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('add_user') }}">Register</a>
+          </li>
         <li class="nav-item">
         <a class="nav-link" href="{{ url_for('login') }}">Login</a>
         </li>
