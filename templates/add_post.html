@@ -9,6 +9,7 @@
     </div>
 {% endfor %}
 
+{% if current_user.is_authenticated %}
 <h2>Add Blog Post...</h2></br>
     <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
         <form method="POST">
@@ -24,5 +25,8 @@
             <br/>
             {{ form.submit(class="btn btn-secondary") }}
         </form>
+{% else %}
+    <p>You must <a href="{{ url_for('login')}}">login</a> first</p>
+{% endif %}
 
 {% endblock %}
