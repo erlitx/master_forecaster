@@ -135,9 +135,26 @@ def logout():
     return redirect(url_for('login'))
 
 # Create Dashboad Page
-@app.route('/dashboad', methods=['GET', 'POST'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
+    form = UserForm()
+    id = current_user.id
+    name_to_update = Users.query.get_or_404(id)
+    if request.method == 'POST':
+        name_to_update.name = request.form['name']
+        name_to_update.username = request.form['username']
+        name_to_update.email = request.form['email']
+        name_to_update.favorite_color = request.form['favorite_color']
+        try:
+            db.session.commit()
+            flash('User updated successfully')
+            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+        except:
+            flash('Something went wrong')
+            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+    else:
+        return render_template('dashboard.html', form=form, name_to_update=name_to_update, id=id)
     return render_template('dashboard.html')
 
 @app.route('/posts')
@@ -219,6 +236,7 @@ def update(id):
     name_to_update = Users.query.get_or_404(id)
     if request.method == 'POST':
         name_to_update.name = request.form['name']
+        name_to_update.username = request.form['username']
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
         try:
