@@ -93,6 +93,32 @@ def add_post():
         flash('Post submitted successfully')
     return render_template('add_post.html', form=form)
 
+@app.route('/user/add', methods = ['GET', 'POST'])
+def add_user():
+    name = None
+    form = UserForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(email=form.email.data).first()
+        if user is None:
+            # Hash the password
+            hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
+            user = Users(name=form.name.data, username=form.username.data, email=form.email.data,
+                         favorite_color=form.favorite_color.data, password_hash=hashed_pw)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data
+        username = form.name.data
+        email = form.email.data
+        favorite_color = form.favorite_color.data
+        form.name.data = ''
+        form.username.data = ''
+        form.email.data = ''
+        form.favorite_color.data = ''
+        form.password_hash.data = '***.data'
+        flash('User Added')
+    our_users = Users.query.order_by(Users.date_added)
+    return render_template('add_user.html', form=form, name=name, our_users=our_users)
+
 #JSON
 @app.route('/date')
 def get_current_date():
@@ -214,32 +240,6 @@ def update(id):
             return render_template('update.html', form=form, name_to_update=name_to_update)
     else:
         return render_template('update.html', form=form, name_to_update=name_to_update, id=id)
-
-@app.route('/user/add', methods = ['GET', 'POST'])
-def add_user():
-    name = None
-    form = UserForm()
-    if form.validate_on_submit():
-        user = Users.query.filter_by(email=form.email.data).first()
-        if user is None:
-            # Hash the password
-            hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
-            user = Users(name=form.name.data, username=form.username.data, email=form.email.data,
-                         favorite_color=form.favorite_color.data, password_hash=hashed_pw)
-            db.session.add(user)
-            db.session.commit()
-        name = form.name.data
-        username = form.name.data
-        email = form.email.data
-        favorite_color = form.favorite_color.data
-        form.name.data = ''
-        form.username.data = ''
-        form.email.data = ''
-        form.favorite_color.data = ''
-        form.password_hash.data = '***.data'
-        flash('User Added')
-    our_users = Users.query.order_by(Users.date_added)
-    return render_template('add_user.html', form=form, name=name, our_users=our_users)
 
 @app.route('/delete/<int:id>')
 def delete(id):
