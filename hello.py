@@ -42,6 +42,8 @@ class Users(db.Model, UserMixin):
     date_added = db.Column(db.DateTime, default=datetime.utcnow())
     # Do some password stuff!
     password_hash = db.Column(db.String(128))
+    # User can have many posts
+    posts = db.relationship('Posts', backref='poster')
 
     @property
     def password(self):
@@ -65,7 +67,8 @@ class Posts(db.Model):
     author = db.Column(db.String(255))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow())
     slug = db.Column(db.String(255))
-
+    # Foreign key to link Users (refer to primary key of the user)
+    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 @app.route('/')
 def index():
     first_name = 'Miha'
@@ -76,14 +79,14 @@ def index():
                                          favorite_pizza=favorite_pizza)
 
 @app.route('/add_post', methods=['GET', 'POST'])
-#@login_required
+@login_required
 def add_post():
     form = PostForm()
     if form.validate_on_submit():
-        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        poster = current_user.id
+        post = Posts(title=form.title.data, content=form.content.data, poster_id=poster, slug=form.slug.data)
         form.title.data = ''
         form.content.data = ''
-        form.author.data = ''
         form.slug.data = ''
 
         # Add post to database
