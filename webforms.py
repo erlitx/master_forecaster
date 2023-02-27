@@ -3,6 +3,12 @@ from wtforms import SubmitField, StringField, PasswordField, BooleanField, Valid
 from wtforms.widgets import TextArea
 from wtforms.validators import DataRequired, equal_to, length
 
+
+# Search Form
+class SearchForm(FlaskForm):
+    searched = StringField('Searched', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 # Create login form
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])

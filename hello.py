@@ -5,10 +5,10 @@ from flask_migrate import Migrate
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm
+from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm, SearchForm
 
 DEBUG = bool(os.getenv('DEBUG', True))
-PORT = int(os.getenv('PORT', 8070))
+PORT = int(os.getenv('PORT', 8090))
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
@@ -234,6 +234,25 @@ def delete_post(id):
         flash('You are not authorized to delete this post')
         posts = Posts.query.order_by(Posts.date_posted)
         return render_template('posts.html', posts=posts)
+
+# Passing form to base.html
+@app.context_processor
+def base():
+    form = SearchForm()
+    return dict(form=form)
+
+@app.route('/search', methods = ['POST'])
+def search():
+    form = SearchForm()
+    posts = Posts.query
+    if form.validate_on_submit():
+        # Get data from submitted form
+        post.searched = form.searched.data
+        # Query database
+        posts = posts.filter(Posts.content.like('%' + post.searched + '%'))
+        posts = posts.order_by(Posts.title).all()
+        return render_template('search.html', form=form, searched=post.searched, posts=posts)
+
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
 def update(id):
@@ -302,6 +321,7 @@ def name():
         form.name.data = ''
         flash('Success')
     return render_template('name.html', name=name, form=form)
+
 
 #Bad Request - 500
 @app.errorhandler(500)
