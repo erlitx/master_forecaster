@@ -210,19 +210,23 @@ def edit_post(id):
     return render_template('edit_post.html', form=form)
 
 @app.route('/posts/delete/<int:id>', methods=['GET', 'POST'])
+@login_required
 def delete_post(id):
     post_to_delete = Posts.query.get_or_404(id)
-
-    try:
-        flash('Post has been deleted')
-        db.session.delete(post_to_delete)
-        db.session.commit()
-        posts = Posts.query.order_by(Posts.date_posted)
-        return render_template('posts.html', posts=posts)
-    except:
-        flash("Can't delete post, something goes wrong")
-        posts = Posts.query.order_by(Posts.date_posted)
-        return render_template('posts.html', posts=posts)
+    id = current_user.id
+    if id == post_to_delete.poster.id:
+        try:
+            flash('Post has been deleted')
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template('posts.html', posts=posts)
+        except:
+            flash("Can't delete post, something goes wrong")
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template('posts.html', posts=posts)
+    else:
+        flash('You are not authorized to delete this post')
 
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
