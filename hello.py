@@ -203,18 +203,23 @@ def edit_post(id):
         db.session.commit()
         flash('Post has been updated')
         return redirect(url_for('post', id=post.id))
-    form.title.data = post.title
-    form.author.data = post.author
-    form.slug.data = post.slug
-    form.content.data = post.content
-    return render_template('edit_post.html', form=form)
+    if current_user.id == post.poster_id:
+        form.title.data = post.title
+        form.author.data = post.author
+        form.slug.data = post.slug
+        form.content.data = post.content
+        return render_template('edit_post.html', form=form)
+    else:
+        flash('You are not authorized to edit this post')
+        posts = Posts.query.order_by(Posts.date_posted)
+        return render_template('posts.html', posts=posts)
 
 @app.route('/posts/delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def delete_post(id):
     post_to_delete = Posts.query.get_or_404(id)
     id = current_user.id
-    if id == post_to_delete.poster.id:
+    if id == Posts.poster_id:
         try:
             flash('Post has been deleted')
             db.session.delete(post_to_delete)
@@ -227,7 +232,8 @@ def delete_post(id):
             return render_template('posts.html', posts=posts)
     else:
         flash('You are not authorized to delete this post')
-
+        posts = Posts.query.order_by(Posts.date_posted)
+        return render_template('posts.html', posts=posts)
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
 def update(id):
