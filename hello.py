@@ -6,12 +6,17 @@ from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm, SearchForm
+from flask_ckeditor import CKEditor
+
 
 DEBUG = bool(os.getenv('DEBUG', True))
 PORT = int(os.getenv('PORT', 8090))
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
+
+# Add CKEditor
+ckeditor = CKEditor(app)
 
 # Old SQLite DB
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'

@@ -24,6 +24,9 @@
             <br/>
             {{ form.submit(class="btn btn-secondary") }}
         </form>
+        {{ ckeditor.load() }}
+        {{ ckeditor.config(name='content') }}
+
 {% else %}
     <p>You must <a href="{{ url_for('login')}}">login</a> first</p>
 {% endif %}
