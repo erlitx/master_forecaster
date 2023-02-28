@@ -18,6 +18,10 @@
   <div class="card-body">
 
     <p class="card-text">
+            <div class="container">
+        <div class="row">
+            <div class="col-8">
+
         <strong>Id:   </strong>{{ current_user.id }}<br/>
         <strong>Name:   </strong>{{ current_user.name }}<br/>
         <strong>Username:   </strong>{{ current_user.username }}<br/>
@@ -28,11 +32,17 @@
         <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Log out</a>
         <a href="{{ url_for('update', id=current_user.id) }}" class="btn btn-secondary btn-sm">Edit Profile</a>
         <a href="{{ url_for('delete', id=current_user.id) }}" class="btn btn-danger btn-sm">Delete Profile</a>
+                <br/><br/>
   </div>
+  <div class="col-4">
+        <img src="{{ url_for('static', filename='images/avatar.jpg') }}" width="170px" align="right">
+    </div>
 </div>
-
-
+</div>
+</div>
+</div>
 <br/>
+
 <div class="card">
   <div class="card-header">
     Update Profile
@@ -53,6 +63,10 @@
             <br/>
             {{ form.submit(class="btn btn-secondary") }}
             </form>
+
+
     </div>
 </div>
+
+
 {% endblock %}
