@@ -74,6 +74,7 @@ class Posts(db.Model):
     slug = db.Column(db.String(255))
     # Foreign key to link Users (refer to primary key of the user)
     poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
 @app.route('/')
 def index():
     first_name = 'Miha'
@@ -82,6 +83,16 @@ def index():
     return render_template('index.html', first_name=first_name,
                                          stuff=stuff,
                                          favorite_pizza=favorite_pizza)
+
+@app.route('/admin')
+@login_required
+def admin():
+    id = current_user.id
+    if id == 22:
+        return render_template('admin.html')
+    else:
+        flash('You are not an admin')
+        return redirect(url_for('dashboard'))
 
 @app.route('/add_post', methods=['GET', 'POST'])
 @login_required
@@ -240,7 +251,7 @@ def delete_post(id):
         posts = Posts.query.order_by(Posts.date_posted)
         return render_template('posts.html', posts=posts)
 
-# Passing form to base.html
+# Passing form to base.html to get form on navbar.html
 @app.context_processor
 def base():
     form = SearchForm()
