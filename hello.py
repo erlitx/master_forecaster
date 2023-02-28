@@ -263,11 +263,11 @@ def search():
     posts = Posts.query
     if form.validate_on_submit():
         # Get data from submitted form
-        post.searched = form.searched.data
+        post_searched = form.searched.data
         # Query database
-        posts = posts.filter(Posts.content.like('%' + post.searched + '%'))
+        posts = posts.filter(Posts.content.like('%' + post_searched + '%'))
         posts = posts.order_by(Posts.title).all()
-        return render_template('search.html', form=form, searched=post.searched, posts=posts)
+        return render_template('search.html', form=form, searched=post_searched, posts=posts)
 
 # Get update DB
 @app.route('/update/<int:id>', methods = ['GET', 'POST'])
