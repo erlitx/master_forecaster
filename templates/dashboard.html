@@ -29,6 +29,7 @@
         <strong>Favorite color:   </strong>{{ current_user.favorite_color }}<br/>
         <strong>Date registered:   </strong>{{ current_user.date_added }}<br/>
         <strong>About Author:   </strong>{{ current_user.about_author }}<br/>
+        <strong>Profile Pic:   </strong>{{ current_user.profile_pic }}<br/>
     </p>
         <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Log out</a>
         <a href="{{ url_for('update', id=current_user.id) }}" class="btn btn-secondary btn-sm">Edit Profile</a>
@@ -51,7 +52,7 @@
 
 
 <div class="card-body">
-    <form action="/dashboard" method="POST">
+    <form action="/dashboard" method="POST" enctype="multipart/form-data">
             {{ form.hidden_tag()}}
             {{ form.name.label(class="form-label") }}
             {{ form.name(class="form-control", value=name_to_update.name) }}
@@ -63,6 +64,9 @@
             {{ form.favorite_color(class="form-control", value=name_to_update.favorite_color) }}
             {{ form.about_author.label(class="form-label") }}
             <textarea name="about_author" class="form-control">{{ name_to_update.about_author }}</textarea>
+            <br/>
+            {{ form.profile_pic.label(class="form-label") }}
+            {{ form.profile_pic(class="form-control", value=name_to_update.profile_pic) }}
             <br/>
             {{ form.submit(class="btn btn-secondary") }}
             </form>

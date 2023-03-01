@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -7,7 +6,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm, SearchForm
 from flask_ckeditor import CKEditor
-
+# For file secure upload
+from werkzeug.utils import secure_filename
+import uuid as uuid
+import os
 
 DEBUG = bool(os.getenv('DEBUG', True))
 PORT = int(os.getenv('PORT', 8090))
@@ -15,7 +17,11 @@ PORT = int(os.getenv('PORT', 8090))
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
 
-# Add CKEditor
+# Set upload folder to uplade files
+UPLOAD_FOLDER = 'static/images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Add CKEditor reach text
 ckeditor = CKEditor(app)
 
 # Old SQLite DB
@@ -46,6 +52,7 @@ class Users(db.Model, UserMixin):
     favorite_color = db.Column(db.String(200))
     about_author = db.Column(db.Text, nullable=True)
     date_added = db.Column(db.DateTime, default=datetime.utcnow())
+    profile_pic = db.Column(db.String(), nullable=True)
     # Do some password stuff!
     password_hash = db.Column(db.String(128))
     # User can have many posts
@@ -159,6 +166,21 @@ def dashboard():
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
         name_to_update.about_author = request.form['about_author']
+        name_to_update.profile_pic = request.files['profile_pic']
+
+        # Grab secure image file name
+        pic_filename = secure_filename(name_to_update.profile_pic.filename)
+        #Set unique file name
+        pic_name = str(uuid.uuid1()) + '_' + pic_filename
+
+        # Save image file
+        name_to_update.profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+
+        #Change it to string to Save a filename
+        name_to_update.profile_pic = pic_name
+
+
+
         try:
             db.session.commit()
             flash('User updated successfully')

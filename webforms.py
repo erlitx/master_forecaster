@@ -2,7 +2,9 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, BooleanField, ValidationError, TextAreaField
 from wtforms.widgets import TextArea
 from wtforms.validators import DataRequired, equal_to, length
+#Reach text editor
 from flask_ckeditor import CKEditorField
+from flask_wtf.file import FileField
 
 # Search Form
 class SearchForm(FlaskForm):
@@ -29,6 +31,7 @@ class UserForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
     favorite_color = StringField('Favorite Color')
     about_author = TextAreaField('About Author')
+    profile_pic = FileField('Profile Pic')
     password_hash = PasswordField('Password', validators=[DataRequired(), equal_to('password_hash2', message='Passwords Must Match!')])
     password_hash2 = PasswordField('Repeat Password', validators=[DataRequired()])
     submit = SubmitField('Push')
