@@ -169,26 +169,32 @@ def dashboard():
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
         name_to_update.about_author = request.form['about_author']
-        name_to_update.profile_pic = request.files['profile_pic']
 
+        if request.files['profile_pic']:
+            name_to_update.profile_pic = request.files['profile_pic']
         # Grab secure image file name
-        pic_filename = secure_filename(name_to_update.profile_pic.filename)
-        #Set unique file name
-        pic_name = str(uuid.uuid1()) + '_' + pic_filename
+            pic_filename = secure_filename(name_to_update.profile_pic.filename)
+            #Set unique file name
+            pic_name = str(uuid.uuid1()) + '_' + pic_filename
 
-        # Save image file
-        name_to_update.profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+            # Save image file
+            name_to_update.profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
 
-        #Change it to string to Save a filename
-        name_to_update.profile_pic = pic_name
+            #Change it to string to Save a filename
+            name_to_update.profile_pic = pic_name
 
-        try:
+            try:
+                db.session.commit()
+                flash('User updated successfully')
+                return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+            except:
+                flash('Something went wrong')
+                return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+        else:
             db.session.commit()
             flash('User updated successfully')
             return render_template('dashboard.html', form=form, name_to_update=name_to_update)
-        except:
-            flash('Something went wrong')
-            return render_template('dashboard.html', form=form, name_to_update=name_to_update)
+
     else:
         return render_template('dashboard.html', form=form, name_to_update=name_to_update, id=id)
     return render_template('dashboard.html')
