@@ -12,12 +12,12 @@ import uuid as uuid
 import os
 
 DEBUG = bool(os.getenv('DEBUG', True))
-PORT = int(os.getenv('PORT', 8090))
+PORT = int(os.getenv('PORT', 8095))
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'my hot pot secret key'
 
-# Set upload folder to uplade files
+# Set upload folder to upload files
 UPLOAD_FOLDER = 'static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -181,8 +181,6 @@ def dashboard():
 
         #Change it to string to Save a filename
         name_to_update.profile_pic = pic_name
-
-
 
         try:
             db.session.commit()
