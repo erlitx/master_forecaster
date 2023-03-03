@@ -318,20 +318,25 @@ def update(id):
         return render_template('update.html', form=form, name_to_update=name_to_update, id=id)
 
 @app.route('/delete/<int:id>')
+@login_required
 def delete(id):
-    name = None
-    form = UserForm()
-    user_to_delete = Users.query.get_or_404(id)
-    try:
-        db.session.delete(user_to_delete)
-        db.session.commit()
-        flash('User deleted successfully')
-        our_users = Users.query.order_by(Users.date_added)
-        return render_template('add_user.html', form=form, name=name, our_users=our_users)
-    except:
-        flash('Something went wrong')
-        our_users = Users.query.order_by(Users.date_added)
-        return render_template('add_user.html', form=form, name=name, our_users=our_users)
+    if id == current_user.id:
+        name = None
+        form = UserForm()
+        user_to_delete = Users.query.get_or_404(id)
+        try:
+            db.session.delete(user_to_delete)
+            db.session.commit()
+            flash('User deleted successfully')
+            our_users = Users.query.order_by(Users.date_added)
+            return render_template('add_user.html', form=form, name=name, our_users=our_users)
+        except:
+            flash('Something went wrong')
+            our_users = Users.query.order_by(Users.date_added)
+            return render_template('add_user.html', form=form, name=name, our_users=our_users)
+    else:
+        flash("You can't delete another User")
+        return redirect(url_for('dashboard'))
 
 @app.route('/user/<name>')
 def user(name):
